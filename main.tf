@@ -1,23 +1,12 @@
-#IAM Role for Scheduler
-resource "aws_iam_role" "scheduler_role" {
+# Use existing IAM Role
+data "aws_iam_role" "ec2_start_stop_role" {
   name = "ec2-start-stop-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "scheduler.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
 }
 
-#Policy (Allow EC2 control)
+# Attach policy to existing role
 resource "aws_iam_role_policy" "scheduler_policy" {
   name = "ec2-start-stop-policy"
-  role = aws_iam_role.scheduler_role.id
+  role = data.aws_iam_role.ec2_start_stop_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -31,7 +20,8 @@ resource "aws_iam_role_policy" "scheduler_policy" {
     }]
   })
 }
-#START EC2
+
+# START EC2
 resource "aws_scheduler_schedule" "start_ec2" {
   name = "daily-ec2-start"
 
@@ -44,18 +34,20 @@ resource "aws_scheduler_schedule" "start_ec2" {
 
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:ec2:startInstances"
-    role_arn = aws_iam_role.scheduler_role.arn
+    role_arn = data.aws_iam_role.ec2_start_stop_role.arn
 
     input = jsonencode({
       InstanceIds = [var.instance_id]
     })
   }
 }
-#stop
+
+# STOP EC2
 resource "aws_scheduler_schedule" "stop_ec2" {
   name = "daily-ec2-stop"
 
-  schedule_expression = "cron(45 2 * * ? *)"
+  schedule_expression = "cron(35 6 * * ? *)"   # 4 hours after 2:35 AM
+
   schedule_expression_timezone = "Asia/Kolkata"
 
   flexible_time_window {
@@ -64,7 +56,7 @@ resource "aws_scheduler_schedule" "stop_ec2" {
 
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:ec2:stopInstances"
-    role_arn = aws_iam_role.scheduler_role.arn
+    role_arn = data.aws_iam_role.ec2_start_stop_role.arn
 
     input = jsonencode({
       InstanceIds = [var.instance_id]
