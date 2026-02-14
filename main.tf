@@ -25,7 +25,7 @@ resource "aws_iam_role_policy" "scheduler_policy" {
 resource "aws_scheduler_schedule" "start_ec2" {
   name = "daily-ec2-start"
 
-  schedule_expression = "cron(35 2 * * ? *)"
+  schedule_expression = "cron(59 2 * * ? *)"
   schedule_expression_timezone = "Asia/Kolkata"
 
   flexible_time_window {
@@ -46,7 +46,7 @@ resource "aws_scheduler_schedule" "start_ec2" {
 resource "aws_scheduler_schedule" "stop_ec2" {
   name = "daily-ec2-stop"
 
-  schedule_expression = "cron(35 6 * * ? *)"   # 4 hours after 2:35 AM
+  schedule_expression = "cron(01 3 * * ? *)"   # 4 hours after 2:35 AM
 
   schedule_expression_timezone = "Asia/Kolkata"
 
