@@ -35,7 +35,7 @@ resource "aws_iam_role_policy" "scheduler_policy" {
 resource "aws_scheduler_schedule" "start_ec2" {
   name = "daily-ec2-start"
 
-  schedule_expression = "cron(59 1 * * ? *)"
+  schedule_expression = "cron(10 2 * * *)"
   schedule_expression_timezone = "Asia/Kolkata"
 
   flexible_time_window {
@@ -44,6 +44,26 @@ resource "aws_scheduler_schedule" "start_ec2" {
 
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:ec2:startInstances"
+    role_arn = aws_iam_role.scheduler_role.arn
+
+    input = jsonencode({
+      InstanceIds = [var.instance_id]
+    })
+  }
+}
+#stop
+resource "aws_scheduler_schedule" "stop_ec2" {
+  name = "daily-ec2-stop"
+
+  schedule_expression = "cron(15 2 * * *)"
+  schedule_expression_timezone = "Asia/Kolkata"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  target {
+    arn      = "arn:aws:scheduler:::aws-sdk:ec2:stopInstances"
     role_arn = aws_iam_role.scheduler_role.arn
 
     input = jsonencode({
